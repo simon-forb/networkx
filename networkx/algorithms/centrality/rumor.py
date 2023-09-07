@@ -40,6 +40,18 @@ def rumor_centrality(G):
             "cannot compute centrality for the null graph"
         )
 
+    cycles = list(nx.simple_cycles(G))
+    if len(cycles) == 0:
+        return rumor_centrality_without_cycles(G)
+    elif len(cycles) == 1:
+        return rumor_centrality_with_single_cycle(G, cycles[0])
+    else:
+        raise NotImplementedError(
+            "rumor centrality does not work for graphs with more than one cycle"
+        )
+
+
+def rumor_centrality_without_cycles(G):
     # Create copy to be able to use node properties
     H = G.copy()
     set_visited_to_false(H)
@@ -59,6 +71,41 @@ def rumor_centrality(G):
         )
 
     return {v: H.nodes[v]["rumor_centrality"] for v in H.nodes}
+
+
+def rumor_centrality_with_single_cycle(G, cycle):
+    cycle_edges = convert_cycle_nodes_to_edges(cycle)
+
+    # Collect individual centralities
+    centralities = {}
+    for edge in cycle_edges:
+        H: nx.Graph = G.copy()
+        H.remove_edge(*edge)
+        centralities = combine_centrality_dictionaries(
+            rumor_centrality_without_cycles(H), centralities
+        )
+
+    # Half every centrality value
+    output = {}
+    for key, value in centralities.items():
+        output[key] = value // 2
+
+    return output
+
+
+def convert_cycle_nodes_to_edges(cycle):
+    cycle_edges = []
+    for i in range(len(cycle)):
+        cycle_edges.append((cycle[i], cycle[(i + 1) % len(cycle)]))
+    return cycle_edges
+
+
+def combine_centrality_dictionaries(d1: dict, d2: dict) -> dict:
+    d3 = d1.copy()
+    for key, value in d2.items():
+        d3[key] += value
+
+    return d3
 
 
 def calculate_rumor_centrality_for_single_vertex(G, v, start_vertex):

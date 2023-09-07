@@ -73,3 +73,56 @@ class TestRumorCentrality:
         exact = {0: 3, 1: 12, 2: 8, 3: 2, 4: 3}
         for n, rc in d.items():
             assert exact[n] == pytest.approx(rc, abs=1e-7)
+
+    def test_rumor_centrality_7(self):
+        G = nx.cycle_graph(3)
+        d = nx.rumor_centrality(G)
+        exact = {0: 2, 1: 2, 2: 2}
+        for n, rc in d.items():
+            assert exact[n] == pytest.approx(rc, abs=1e-7)
+
+    def test_rumor_centrality_8(self):
+        G = self.G.copy()
+        G.add_node(5)
+        G.add_edge(4, 5)
+        G.add_edge(2, 5)
+        # 0 -- 1 -- 2 -- 3
+        #      |    |
+        #      4 -- 5
+        d = nx.rumor_centrality(G)
+        exact = {0: 9, 1: 45, 2: 45, 3: 9, 4: 18, 5: 18}
+        for n, rc in d.items():
+            assert exact[n] == pytest.approx(rc, abs=1e-7)
+
+    def test_rumor_centrality_9(self):
+        G = self.G.copy()
+        G.add_edge(4, 5)
+        G.add_edge(2, 5)
+        G.add_edge(1, 6)
+        G.add_edge(1, 7)
+        G.add_edge(0, 8)
+        #         6   7
+        #          \ /
+        # 8 -- 0 -- 1 -- 2 -- 3
+        #           |    |
+        #           4 -- 5
+        d = nx.rumor_centrality(G)
+        exact = {
+            0: 2160,
+            1: 7560,
+            2: 3456,
+            3: 432,
+            4: 1512,
+            5: 756,
+            6: 945,
+            7: 945,
+            8: 270,
+        }
+        for n, rc in d.items():
+            assert exact[n] == pytest.approx(rc, abs=1e-7)
+
+    def test_rumor_centrality_10(self):
+        G = nx.cycle_graph(5)
+        G.add_edge(2, 4)
+        with pytest.raises(NotImplementedError):
+            nx.rumor_centrality(G)
